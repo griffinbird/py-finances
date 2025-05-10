@@ -6,10 +6,16 @@ import os, uuid
 
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+from dotenv import load_dotenv
 
 st.set_page_config(page_title="Financial Dashboard", page_icon=":money_with_wings:", layout="wide")
 
-catagory_file = "categories.json"
+# load .env file
+load_dotenv()
+
+catagory_file = os.getenv("CATEGORY_FILE")
+blob_container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
+blob_name = os.getenv("AZURE_STORAGE_BLOB_NAME")
 
 if "categories" not in st.session_state:
     st.session_state.categories = {
@@ -24,10 +30,16 @@ def save_categories():
     with open(catagory_file, "w") as f:
         json.dump(st.session_state.categories, f)
 
-# Connect to Azure Blob Storage
 def connect_to_azure_blob_storage():
-    # read connection string from environment variable
+    # Read environment variables
     blob_cnn_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    print(f"Blob connection string: {blob_cnn_str}")
+    print(f"Blob container name: {blob_container_name}")
+    
+    # Check if the connection string and container name are set
+    if not blob_cnn_str or not blob_container_name:
+        print("Azure Storage connection string or container name not set.")
+        return None
     try:
         # Use DefaultAzureCredential to authenticate
         credential = DefaultAzureCredential()
@@ -77,8 +89,9 @@ def main():
         return
     
     # Download a file from Azure Blob Storage
-    container_name = "bankstatements"
-    blob_name = "Data_export_09052025.csv"
+    container_name = blob_container_name
+    print(f"Blob name: {blob_name}")
+ 
     local_file_path = os.path.join(os.getcwd(), blob_name)
     try:
         # Create a container client
