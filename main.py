@@ -135,7 +135,7 @@ def main():
                     st.session_state.categories[new_category] = []
                     save_categories()
                     st.rerun()
-            st.subheader("Youre expenses")
+            st.subheader("Your Expenses")
             edited_df = st.data_editor(
                 st.session_state.debits_df[["Date", "Narrative", "Debit Amount", "Category"]],
                 column_config={
@@ -176,6 +176,18 @@ def main():
                 use_container_width=True,
                 hide_index=True,
             )
+
+            fig = px.pie(
+                category_totals,
+                values="Debit Amount",
+                names="Category",
+                title="Expense Distribution by Category",
+                color_discrete_sequence=px.colors.sequential.RdBu,
+                hole=0.4,
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+
                     
         with tab2: 
             st.write(credits_df)
