@@ -124,6 +124,7 @@ def main():
         debits_df = df[df["Debit Amount"] > 0].copy()
         credits_df = df[df["Credit Amount"] > 0].copy()
         st.session_state.debits_df = debits_df.copy()
+        st.session_state.credits_df = credits_df.copy()
         # Create a new column "Transaction Type" based on the "Debit Amount" and "Credit Amount"
         tab1, tab2 = st.tabs(["Expenses (Debits)", "Payments (Credits)"])
         with tab1:
@@ -141,7 +142,7 @@ def main():
                 column_config={
                     "Data": st.column_config.DateColumn("Date", format="DD/MM/YYYY"),
                     "Narrative": st.column_config.TextColumn("Narrative"),
-                    "Debit Amount": st.column_config.NumberColumn("Debit Amount", format="%.2f AUD"),
+                    "Debit Amount": st.column_config.NumberColumn("Debit Amount", format="%2f AUD"),
                     "Category": st.column_config.SelectboxColumn(
                         "Category",
                         options=list(st.session_state.categories.keys()),
@@ -187,9 +188,10 @@ def main():
             )
             st.plotly_chart(fig, use_container_width=True)
 
-
-                    
-        with tab2: 
+        with tab2:
+            st.subheader("Payment Summary")
+            total_payments = st.session_state.credits_df["Credit Amount"].sum()
+            st.metric("Total Payments", f"{total_payments:,.2f} AUD")
             st.write(credits_df)
 
 main()
