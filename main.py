@@ -78,8 +78,16 @@ def load_transaction_data(file_path):
     except Exception as e:
         st.error(f"Error procesisng file: {str(e)}")
         return None
+
+def add_keywords_to_category(category, keyword):
+    keyword = keyword.strip()
+    if keyword and keyword not in st.session_state.categories[category]:
+        st.session_state.categories[category].append(keyword)
+        save_categories()
+        return True
     
-    
+    return False
+
 def main():
 
     st.title("Financial Dashboard")
@@ -115,6 +123,7 @@ def main():
         df = df.fillna(0)
         debits_df = df[df["Debit Amount"] > 0].copy()
         credits_df = df[df["Credit Amount"] > 0].copy()
+        st.session_state.debits_df = debits_df.copy()
         # Create a new column "Transaction Type" based on the "Debit Amount" and "Credit Amount"
         tab1, tab2 = st.tabs(["Expenses (Debits)", "Payments (Credits)"])
         with tab1:
@@ -126,7 +135,35 @@ def main():
                     st.session_state.categories[new_category] = []
                     save_categories()
                     st.rerun()
-            st.write(debits_df)
+            st.subheader("Youre expenses")
+            edited_df = st.data_editor(
+                st.session_state.debits_df[["Date", "Narrative", "Debit Amount", "Category"]],
+                column_config={
+                    "Data": st.column_config.DateColumn("Date", format="DD/MM/YYYY"),
+                    "Narrative": st.column_config.TextColumn("Narrative"),
+                    "Debit Amount": st.column_config.NumberColumn("Debit Amount", format="%.2f AUD"),
+                    "Category": st.column_config.SelectboxColumn(
+                        "Category",
+                        options=list(st.session_state.categories.keys()),
+                        default="Uncategorised",
+                    )
+                },
+                hide_index=True,
+                use_container_width=True,
+                key="category_editor"
+            )
+
+            save_button = st.button("Apply Changes", type="primary")
+            if save_button:
+                for idx, row in edited_df.iterrows():
+                    new_category = row["Category"]
+                    if new_category == st.session_state.debits_df.at[idx,"Category"]:
+                        continue 
+
+                    narrative = row["Narrative"]
+                    st.session_state.debits_df.at[idx, "Category"] = new_category
+                    add_keywords_to_category(new_category, narrative)
+                    
         with tab2: 
             st.write(credits_df)
 
