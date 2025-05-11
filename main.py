@@ -163,6 +163,19 @@ def main():
                     narrative = row["Narrative"]
                     st.session_state.debits_df.at[idx, "Category"] = new_category
                     add_keywords_to_category(new_category, narrative)
+
+            st.subheader("Expense Summary")
+            category_totals = st.session_state.debits_df.groupby("Category")["Debit Amount"].sum().reset_index()
+            category_totals = category_totals.sort_values("Debit Amount", ascending=False)
+
+            st.dataframe(
+                category_totals,
+                column_config={
+                    "Debit Amount": st.column_config.NumberColumn("Debit Amount", format="%.2f AUD")
+                },
+                use_container_width=True,
+                hide_index=True,
+            )
                     
         with tab2: 
             st.write(credits_df)
